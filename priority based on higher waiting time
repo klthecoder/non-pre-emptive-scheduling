@@ -1,0 +1,53 @@
+class Process:
+    def _init_(self, pid, arrival_time, estimated_run_time):
+        self.pid = pid
+        self.arrival_time = arrival_time
+        self.estimated_run_time = estimated_run_time
+        self.waiting_time = 0
+        self.priority = 1
+
+    def _repr_(self):
+        return f"Process(pid={self.pid}, arrival_time={self.arrival_time}, estimated_run_time={self.estimated_run_time}, waiting_time={self.waiting_time}, priority={self.priority})"
+
+def shortest_job_next_with_waiting_time(processes):
+    ready_queue = deque()
+    waiting_queue = deque(processes)
+
+    current_time = 0
+    gantt_chart = []
+
+    while waiting_queue or ready_queue:
+        # Move processes that have arrived to the ready queue
+        while waiting_queue and waiting_queue[0].arrival_time <= current_time:
+            process = waiting_queue.popleft()
+            ready_queue.append(process)
+
+        if not ready_queue:
+            # No process is ready, wait for the next process to arrive
+            current_time = waiting_queue[0].arrival_time
+            continue
+
+        # Choose the process with the highest priority
+        process = min(ready_queue, key=lambda p: p.priority)
+
+        # Update waiting times and priorities for all processes
+        for p in waiting_queue + ready_queue:
+            if p is not process:
+                p.waiting_time += 1
+                p.priority = 1 + p.waiting_time / p.estimated_run_time
+
+        # Execute the process for 1 unit of time
+        process.estimated_run_time -= 1
+        gantt_chart.append(process.pid)
+
+        if process.estimated_run_time == 0:
+            # Process has finished
+            ready_queue.remove(process)
+
+        current_time += 1
+
+    # Calculate waiting times
+    waiting_times = [p.waiting_time for p in processes]
+    average_waiting_time = sum(waiting_times) / len(waiting_times)
+
+    return gantt_chart, waiting_times, average_waiting_time
