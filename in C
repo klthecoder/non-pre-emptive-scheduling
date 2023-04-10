@@ -1,0 +1,72 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+struct Process {
+int pid;
+int burst_time;
+int waiting_time;
+int priority;
+};
+
+void sort(struct Process *arr, int n) {
+// Selection sort
+for (int i = 0; i < n - 1; i++) {
+int min_index = i;
+for (int j = i + 1; j < n; j++) {
+if (arr[j].priority < arr[min_index].priority) {
+min_index = j;
+}
+}
+if (min_index != i) {
+struct Process temp = arr[i];
+arr[i] = arr[min_index];
+arr[min_index] = temp;
+}
+}
+}
+
+int main() {
+int n;
+printf("Enter the number of processes: ");
+scanf("%d", &n);
+
+struct Process *processes = malloc(n * sizeof(struct Process));
+for (int i = 0; i < n; i++) {
+processes[i].pid = i + 1;
+printf("Enter the burst time for process %d: ", processes[i].pid);
+scanf("%d", &processes[i].burst_time);
+processes[i].waiting_time = 0;
+processes[i].priority = 1 + processes[i].waiting_time / processes[i].burst_time;
+}
+
+printf("\nGantt Chart:\n");
+int current_time = 0;
+while (1) {
+sort(processes, n);
+if (processes[0].burst_time == 0) {
+break;
+}
+printf("| P%d ", processes[0].pid);
+processes[0].burst_time--;
+current_time++;
+for (int i = 1; i < n; i++) {
+if (processes[i].burst_time > 0) {
+processes[i].waiting_time++;
+processes[i].priority = 1 + processes[i].waiting_time / processes[i].burst_time;
+}
+}
+}
+printf("|\n");
+
+float total_waiting_time = 0;
+printf("\nProcess\tBurst Time\tWaiting Time\n");
+for (int i = 0; i < n; i++) {
+printf("P%d\t%d\t\t%d\n", processes[i].pid, processes[i].burst_time + 1, processes[i].waiting_time);
+total_waiting_time += processes[i].waiting_time;
+}
+float average_waiting_time = total_waiting_time / n;
+printf("\nAverage Waiting Time: %.2f\n", average_waiting_time);
+
+free(processes);
+return 0;
+}
